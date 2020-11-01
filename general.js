@@ -36,6 +36,7 @@ function sendMessage(headers_obj, message, callback)
     'resource': {
       'raw': window.btoa(email).replace(/\+/g, '-').replace(/\//g, '_')
     }
+  
   });
 
   return sendRequest.execute(callback);
@@ -62,6 +63,65 @@ function composeTidy()
 
 
 $form.addEventListener('click',sendfunction)
+
+
+//search email
+
+var search=document.querySelector('#search')
+var input=document.querySelector('#insearch')
+
+function appendPre(message) {
+  var li = document.createElement('li');
+  li.innerText=message
+  li.classList.add("list-group-item")
+  var ul=document.querySelector(".list-group")
+  ul.appendChild(li)
+}
+
+var searchemail=function searchemail(event) {
+  event.preventDefault()
+  var ul=document.querySelector(".list-group")
+  console.log(ul.hasChildNodes())
+  while(ul.hasChildNodes()){
+    ul.removeChild(ul.firstChild)
+  }
+  console.log(input.value)
+  if(input.value!==''){
+    console.log('here')
+    gapi.client.gmail.users.messages.list({
+      'userId': 'me',
+      'q':input.value
+    }).then(function(response) {
+      var messages = response.result.messages;
+      if (messages && messages.length > 0) {
+        for (i = 0; i < messages.length; i++) {
+          var message = messages[i];
+          gapi.client.gmail.users.messages.get({
+            'userId': 'me',
+            'id':message.id
+          }).then(function(response){
+              var mesconts=response.result.payload.headers;
+              for(j=0;j<mesconts.length;j++){
+  
+                var mess=mesconts[j]
+                if(mess["name"]==='Subject'){
+                  appendPre(mess["value"])
+                }
+                    
+              }
+  
+          })
+          //appendPre(message.id)
+        }
+      } else {
+        appendPre('No Labels found.');
+      }
+    });
+  }
+  
+}
+
+search.addEventListener('click',searchemail)
 
 
 
